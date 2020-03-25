@@ -58,7 +58,10 @@
       this.data = data;
 
       this.renderInMenu();
+      this.getElements();
       this.initAccordion();
+      this.initOrderForm();
+      this.processOrder();
       //console.log('new Product:', this);
     }
 
@@ -70,9 +73,18 @@
       menuContainer.appendChild(this.element);
     }
 
+    getElements(){
+      const thisProduct = this;
+
+      thisProduct.accordionTrigger = thisProduct.element.querySelector(select.menuProduct.clickable);
+      thisProduct.form = thisProduct.element.querySelector(select.menuProduct.form);
+      thisProduct.formInputs = thisProduct.form.querySelectorAll(select.all.formInputs);
+      thisProduct.cartButton = thisProduct.element.querySelector(select.menuProduct.cartButton);
+      thisProduct.priceElem = thisProduct.element.querySelector(select.menuProduct.priceElem);
+    }
+
     initAccordion(){
-      const clickable = this.element.querySelector(select.menuProduct.clickable);
-      clickable.addEventListener('click', () => {
+      this.accordionTrigger.addEventListener('click', () => {
         event.preventDefault();
         this.element.classList.toggle(classNames.menuProduct.wrapperActive);
         const allProducts = document.querySelectorAll(select.all.menuProducts);
@@ -82,6 +94,43 @@
           }
         }
       });
+    }
+
+    initOrderForm() {
+      this.form.addEventListener('submit', () => {
+        event.preventDefault();
+        this.processOrder();
+      });
+
+      for(let input of this.formInputs) {
+        input.addEventListener('change', () => {
+          this.processOrder();
+        });
+      }
+
+      this.cartButton.addEventListener('click', event => {
+        event.preventDefault();
+        this.processOrder();
+      });
+    }
+
+    processOrder() {
+      const formData = utils.serializeFormToObject(this.form);
+      let price = dataSource.products[this.id].price;
+      for( let param in dataSource.products[this.id].params) {
+        for(let option in dataSource.products[this.id].params[param].options) {
+          if(formData[param]){
+            if(formData[param].includes(option) && !dataSource.products[this.id].params[param].options[option].default) {
+              price += dataSource.products[this.id].params[param].options[option].price;
+            } else if(!formData[param].includes(option) && dataSource.products[this.id].params[param].options[option].default) {
+              price -= dataSource.products[this.id].params[param].options[option].price;
+            }
+          } else if(dataSource.products[this.id].params[param].options[option].default) {
+            price -= dataSource.products[this.id].params[param].options[option].price;
+          }
+        }
+      }
+      this.element.querySelector('.price').innerHTML = price;
     }
   }
 
