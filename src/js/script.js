@@ -6,6 +6,7 @@
   const select = {
     templateOf: {
       menuProduct: '#template-menu-product',
+      cartProduct: '#template-cart-product', // CODE ADDED
     },
     containerOf: {
       menu: '#product-list',
@@ -26,11 +27,31 @@
     },
     widgets: {
       amount: {
-        input: 'input[name="amount"]',
+        input: 'input.amount', // CODE CHANGED
         linkDecrease: 'a[href="#less"]',
         linkIncrease: 'a[href="#more"]',
       },
     },
+    // CODE ADDED START
+    cart: {
+      productList: '.cart__order-summary',
+      toggleTrigger: '.cart__summary',
+      totalNumber: `.cart__total-number`,
+      totalPrice: '.cart__total-price strong, .cart__order-total .cart__order-price-sum strong',
+      subtotalPrice: '.cart__order-subtotal .cart__order-price-sum strong',
+      deliveryFee: '.cart__order-delivery .cart__order-price-sum strong',
+      form: '.cart__order',
+      formSubmit: '.cart__order [type="submit"]',
+      phone: '[name="phone"]',
+      address: '[name="address"]',
+    },
+    cartProduct: {
+      amountWidget: '.widget-amount',
+      price: '.cart__product-price',
+      edit: '[href="#edit"]',
+      remove: '[href="#remove"]',
+    },
+    // CODE ADDED END
   };
 
   const classNames = {
@@ -38,6 +59,11 @@
       wrapperActive: 'active',
       imageVisible: 'active',
     },
+    // CODE ADDED START
+    cart: {
+      wrapperActive: 'active',
+    },
+    // CODE ADDED END
   };
 
   const settings = {
@@ -45,11 +71,19 @@
       defaultValue: 1,
       defaultMin: 1,
       defaultMax: 9,
-    }
+    }, // CODE CHANGED
+    // CODE ADDED START
+    cart: {
+      defaultDeliveryFee: 20,
+    },
+    // CODE ADDED END
   };
 
   const templates = {
     menuProduct: Handlebars.compile(document.querySelector(select.templateOf.menuProduct).innerHTML),
+    // CODE ADDED START
+    cartProduct: Handlebars.compile(document.querySelector(select.templateOf.cartProduct).innerHTML),
+    // CODE ADDED END
   };
 
   class Product {
@@ -146,7 +180,6 @@
       }
       this.price *= this.amountWidget.value;
       this.element.querySelector('.price').innerHTML = this.price;
-      console.log(this.price);
     }
 
     initAmountWidget() {
@@ -162,8 +195,6 @@
       this.getElements(element);
       this.setValue(this.input.value);
       this.initActions();
-      console.log('AmountWidget:', this);
-      console.log(element);
     }
 
     getElements(element){
@@ -201,14 +232,42 @@
     }
 
     announce() {
-      console.log('announce');
       const event = new Event('updated');
       this.element.dispatchEvent(event);
     }
 
   }
 
+  class Cart {
+    constructor(element) {
+      this.product = [];
+      this.getElements(element);
+      this.initActions();
+      console.log('new Cart', this);
+    }
+
+    getElements(element) {
+      this.dom = {};
+      this.dom.wrapper = element;
+      this.dom.toggleTrigger = this.dom.wrapper.querySelector(select.cart.toggleTrigger);
+    }
+
+    initActions() {
+      this.dom.toggleTrigger.addEventListener('click',
+        () => {
+          console.log(this.dom.wrapper);
+
+          this.dom.wrapper.classList.toggle(classNames.cart.wrapperActive);
+        });
+    }
+  }
+
   const app = {
+
+    initCart: () => {
+      const cartElem = document.querySelector(select.containerOf.cart);
+      this.cart = new Cart(cartElem);
+    },
 
     initMenu: function() {
       for(let productData in this.data.products) {
@@ -230,6 +289,7 @@
 
       this.initData();
       this.initMenu();
+      this.initCart();
     },
   };
 
