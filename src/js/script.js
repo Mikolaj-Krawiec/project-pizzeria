@@ -97,13 +97,11 @@
       this.initOrderForm();
       this.initAmountWidget();
       this.processOrder();
-      //console.log('new Product:', this);
     }
 
     renderInMenu() {
       const generatedHTML = templates.menuProduct(this.data);
       this.element = utils.createDOMFromHTML(generatedHTML);
-      //console.log(this.element);
       const menuContainer = document.querySelector(select.containerOf.menu);
       menuContainer.appendChild(this.element);
     }
@@ -173,7 +171,7 @@
               this.params[param] = {
                 label: dataSource.products[this.id].params[param].label,
                 options: {},
-              }
+              };
             }
             this.params[param].options[option] = dataSource.products[this.id].params[param].options[option].label;
             // Adding price of checked option to price
@@ -249,7 +247,7 @@
     }
 
     announce() {
-      const event = new Event('updated');
+      const event = new Event('updated', {bubbles: true});
       this.element.dispatchEvent(event);
     }
 
@@ -257,10 +255,10 @@
 
   class Cart {
     constructor(element) {
-      this.product = [];
+      this.products = [];
       this.getElements(element);
       this.initActions();
-      console.log('new Cart', this);
+      this.deliveryFee = settings.cart.defaultDeliveryFee;
     }
 
     getElements(element) {
@@ -268,21 +266,77 @@
       this.dom.productList = document.querySelector(select.cart.productList);
       this.dom.wrapper = element;
       this.dom.toggleTrigger = this.dom.wrapper.querySelector(select.cart.toggleTrigger);
+
+      this.renderTotalsKeys = ['totalNumber', 'totalPrice', 'subtotalPrice', 'deliveryFee'];
+      for(let key of this.renderTotalsKeys){
+        this.dom[key] = this.dom.wrapper.querySelectorAll(select.cart[key]);
+      }
+    }
+
+    update() {
+      this.totalNumber = 0;
+      this.subtotalPrice = 0;
+      for(const product of this.products) {
+        this.subtotalPrice += product.price;
+        this.totalNumber += product.amount;
+      }
+      this.totalPrice = this.subtotalPrice + this.deliveryFee;
+      for(let key of this.renderTotalsKeys) {
+        for(let elem of this.dom[key]) {
+          elem.innerHTML = this[key];
+        }
+      }
     }
 
     initActions() {
       this.dom.toggleTrigger.addEventListener('click',
         () => {
-          console.log(this.dom.wrapper);
           this.dom.wrapper.classList.toggle(classNames.cart.wrapperActive);
         }
       );
+      this.dom.productList.addEventListener('updated' , this.update.bind(this));
     }
 
     add(menuProduct) {
       const generatedHTML = templates.cartProduct(menuProduct);
       const generatedDOM = utils.createDOMFromHTML(generatedHTML);
       this.dom.productList.appendChild(generatedDOM);
+      this.products.push(new CartProduct(menuProduct, generatedDOM));
+      this.update();
+    }
+
+  }
+
+  class CartProduct {
+    constructor(menuProduct , element) {
+      this.id = menuProduct.id;
+      this.name = menuProduct.name;
+      this.price = menuProduct.price;
+      this.priceSingle = menuProduct.priceSingle;
+      this.amount = menuProduct.amount;
+      this.options = JSON.parse(JSON.stringify(menuProduct.params));
+      this.getElements(element);
+      this.initAmountWidget();
+    }
+
+    getElements(element) {
+      this.dom = {};
+
+      this.dom.wrapper = element;
+      this.dom.amountWidget = this.dom.wrapper.querySelector(select.cartProduct.amountWidget);
+      this.dom.price = this.dom.wrapper.querySelector(select.cartProduct.price);
+      this.dom.edit = this.dom.wrapper.querySelector(select.cartProduct.edit);
+      this.dom.remove = this.dom.wrapper.querySelector(select.cartProduct.remove);
+    }
+
+    initAmountWidget() {
+      this.amountWidget = new AmountWidget(this.dom.amountWidget);
+      this.dom.amountWidget.addEventListener('updated',
+        () => {
+          this.amount = this.amountWidget.value;
+          this.price = this.priceSingle * this.amount;
+          this.dom.price.innerHTML = this.price;
+        });
     }
 
   }
