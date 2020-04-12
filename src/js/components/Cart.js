@@ -9,6 +9,7 @@ class Cart {
     this.getElements(element);
     this.initActions();
     this.deliveryFee = settings.cart.defaultDeliveryFee;
+    this.update();
   }
 
   getElements(element) {
