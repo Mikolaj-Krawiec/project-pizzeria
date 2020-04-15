@@ -70,8 +70,8 @@ const app = {
         return rawResponse.json();
       })
       .then((parsedResponse) => {
-        console.log('(parsedRespond:' ,(parsedResponse));
         this.data.products = parsedResponse;
+        console.log('parsedRespond: ', parsedResponse);
         this.initMenu();
       });
 

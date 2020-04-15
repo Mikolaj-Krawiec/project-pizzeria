@@ -12,6 +12,8 @@ class Booking {
   }
 
   getData() {
+    console.log('getData');
+
     this.date = this.datePicker.value;
     const startDateParam = settings.db.dateStartParamKey + '=' + utils.dateToStr(this.datePicker.minDate);
     const endDateparam = settings.db.dateEndParamKey + '=' + utils.dateToStr(this.datePicker.maxDate);
@@ -38,8 +40,6 @@ class Booking {
       eventsRepeat: settings.db.url + '/' + settings.db.event   + '?' + params.eventsRepeat.join('&'),
     };
 
-    console.log(urls);
-
     Promise.all([
       fetch(urls.booking),
       fetch(urls.eventCurrent),
@@ -64,6 +64,11 @@ class Booking {
   parseData(bookings, eventCurrent, eventsRepeat) {
     this.booked = {};
     for(let item of bookings) {
+      console.log('date:',item.date);
+      console.log('hour:',item.hour);
+      console.log('duration:',item.duration);
+      console.log('table:',item.table);
+
       this.makeBooked(item.date, item.hour, item.duration, item.table);
     }
     for(let item of eventCurrent) {
@@ -98,8 +103,7 @@ class Booking {
   }
 
   updateDOM() {
-    console.log(this.hourPicker);
-    console.log(this.datePicker);
+    this.selectedTable = undefined;
 
     this.hour = utils.hourToNumber(this.hourPicker.value);
     this.date = this.datePicker.value;
@@ -125,6 +129,75 @@ class Booking {
 
   }
 
+  tableClickedHandler() {
+    const table = event.currentTarget;
+
+    if(this.selectedTable !== undefined) {
+      for(let t of this.dom.tables) {
+        if(t.getAttribute(settings.booking.tableIdAttribute) == this.selectedTable) {
+          t.classList.remove(classNames.booking.tableBooked);
+        }
+      }
+      if(this.selectedTable === table.getAttribute(settings.booking.tableIdAttribute)) {
+        this.selectedTable = undefined;
+        return;
+      }
+      this.selectedTable = undefined;
+    }
+
+    if(!table.classList.contains(classNames.booking.tableBooked)) {
+      table.classList.add(classNames.booking.tableBooked);
+      this.selectedTable =  +table.getAttribute(settings.booking.tableIdAttribute);
+    }
+  }
+
+  formSubmitClickHandler() {
+    event.preventDefault();
+
+    if(this.selectedTable && this.dom.address.value && this.dom.phone.value) {
+
+      const url = settings.db.url + '/' + settings.db.booking;
+
+      const starterArray = [];
+
+      console.log('this.dom.starters:',this.dom.starters);
+      for(const starter of this.dom.starters) {
+        if(starter.checked) {
+          starterArray.push(starter.value);
+        }
+      }
+
+      const payload = {
+        date: this.datePicker.value,
+        hour: this.hourPicker.value,
+        table: this.selectedTable,
+        duration: this.hoursAmount.value,
+        ppl: this.peopleAmount.value,
+        address: this.dom.address.value,
+        phone: this.dom.phone.value,
+        starters: starterArray,
+      };
+
+      const option = {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(payload),
+      };
+
+      fetch(url, option)
+        .then(respond => respond.json())
+        .then(parsedRespond => {
+          console.log('parsedRespond: ', parsedRespond);
+          this.getData();
+          this.selectedTable = undefined;
+        });
+    } else {
+      alert('Wrong input');
+    }
+  }
+
   render(container) {
     const generatedHTML = templates.bookingWidget();
 
@@ -140,6 +213,11 @@ class Booking {
     this.dom.hoursAmount = this.dom.wrapper.querySelector(select.booking.hoursAmount);
 
     this.dom.tables = this.dom.wrapper.querySelectorAll(select.booking.tables);
+
+    this.dom.formSubmit = this.dom.wrapper.querySelector(select.booking.formSubmit);
+    this.dom.phone = this.dom.wrapper.querySelector(select.booking.phone);
+    this.dom.address = this.dom.wrapper.querySelector(select.booking.address);
+    this.dom.starters = this.dom.wrapper.querySelectorAll(select.booking.starter);
   }
 
   initWidget() {
@@ -149,7 +227,11 @@ class Booking {
     this.datePicker = new DatePicker(this.dom.datePicker);
     this.hourPicker = new HourPicker(this.dom.hourPicker);
 
-    this.dom.wrapper.addEventListener('updated', this.updateDOM);
+    this.dom.wrapper.addEventListener('updated_DateOrHour', this.updateDOM.bind(this));
+    this.dom.tables.forEach(element => {
+      element.addEventListener('click', this.tableClickedHandler.bind(this));
+    });
+    this.dom.formSubmit.addEventListener('click', this.formSubmitClickHandler.bind(this));
   }
 }
 

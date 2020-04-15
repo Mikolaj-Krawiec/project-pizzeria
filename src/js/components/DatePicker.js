@@ -26,7 +26,7 @@ class DatePicker extends BaseWidget {
           return (date.getDay() === 1);
         }
       ],
-      onChange: function(selectedDates, dateStr) {
+      onChange: (selectedDates, dateStr) => {
         this.value = dateStr;
       },
     });
@@ -43,6 +43,12 @@ class DatePicker extends BaseWidget {
   renderValue() {
 
   }
+
+  announce() {
+    const event = new Event('updated_DateOrHour', {bubbles: true});
+    this.dom.wrapper.dispatchEvent(event);
+  }
+
 }
 
 export default DatePicker;
