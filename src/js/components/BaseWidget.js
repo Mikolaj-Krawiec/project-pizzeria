@@ -33,6 +33,7 @@ class BaseWidget{
   }
 
   announce() {
+    console.log('new input!:', this.value);
     const event = new Event('updated', {bubbles: true});
     this.dom.wrapper.dispatchEvent(event);
   }
