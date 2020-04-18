@@ -10,8 +10,8 @@ class BaseWidget{
   }
 
   set value(value) {
-
     const newValue = this.parseValue(value);
+
     if(newValue != this.correctValue && this.isValid(newValue))
     {
       this.correctValue = newValue;
@@ -21,7 +21,7 @@ class BaseWidget{
   }
 
   parseValue(value) {
-    return parseInt(value);
+    return parseFloat(value);
   }
 
   isValid(value){

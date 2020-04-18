@@ -2,10 +2,14 @@ import {settings, select} from '../settings.js';
 import BaseWidget from './BaseWidget.js';
 
 class AmountWidget extends BaseWidget {
-  constructor(element) {
-    super(element, settings.amountWidget.defaultValue);
+  constructor(element, step = 1, minValue = settings.amountWidget.defaultMin, maxValue = settings.amountWidget.defaultMax, defaultValue = settings.amountWidget.defaultValue)  {
+    super(element, defaultValue);
+    this.maxValue = maxValue;
+    this.minValue = minValue;
+    this.step = +step;
     this.getElements(element);
     this.initActions();
+    this.renderValue();
   }
 
   getElements(){
@@ -16,8 +20,8 @@ class AmountWidget extends BaseWidget {
 
   isValid(value){
     return !isNaN(value) &&
-    value >= settings.amountWidget.defaultMin &&
-    value <= settings.amountWidget.defaultMax;
+    value >= this.minValue &&
+    value <= this.maxValue;
   }
 
   renderValue() {
@@ -31,11 +35,11 @@ class AmountWidget extends BaseWidget {
     });
     this.dom.linkDecrease.addEventListener('click', () => {
       event.preventDefault();
-      this.value = this.value - 1;
+      this.value = this.value - this.step;
     });
     this.dom.linkIncrease.addEventListener('click', ()=> {
       event.preventDefault();
-      this.value = this.value + 1;
+      this.value = this.value + this.step;
     });
   }
 

@@ -6,6 +6,7 @@ import { utils } from '../utils.js';
 
 class Booking {
   constructor(container) {
+    this.freeHour = 0;
     this.render(container);
     this.initWidget();
     this.getData();
@@ -64,11 +65,6 @@ class Booking {
   parseData(bookings, eventCurrent, eventsRepeat) {
     this.booked = {};
     for(let item of bookings) {
-      console.log('date:',item.date);
-      console.log('hour:',item.hour);
-      console.log('duration:',item.duration);
-      console.log('table:',item.table);
-
       this.makeBooked(item.date, item.hour, item.duration, item.table);
     }
     for(let item of eventCurrent) {
@@ -131,6 +127,7 @@ class Booking {
 
   tableClickedHandler() {
     const table = event.currentTarget;
+    const tableId = +table.getAttribute(settings.booking.tableIdAttribute);
 
     if(this.selectedTable !== undefined) {
       for(let t of this.dom.tables) {
@@ -138,7 +135,7 @@ class Booking {
           t.classList.remove(classNames.booking.tableBooked);
         }
       }
-      if(this.selectedTable === table.getAttribute(settings.booking.tableIdAttribute)) {
+      if(this.selectedTable === tableId) {
         this.selectedTable = undefined;
         return;
       }
@@ -147,8 +144,28 @@ class Booking {
 
     if(!table.classList.contains(classNames.booking.tableBooked)) {
       table.classList.add(classNames.booking.tableBooked);
-      this.selectedTable =  +table.getAttribute(settings.booking.tableIdAttribute);
+      this.selectedTable =  tableId;
     }
+    // how many hours you can book
+    this.freeHour = 0;
+
+    if(this.selectedTable && this.hour != 0) {
+      for(let hour = this.hour ; hour < 24 ; hour += 0.5 ) {
+        if(!this.booked[this.date][hour]) {
+          this.freeHour += 0.5;
+          console.log(this.freeHour);
+          continue;
+        } else {
+          if(this.booked[this.date][hour].includes(tableId)) {
+            break;
+          }
+          this.freeHour += 0.5;
+          console.log(this.freeHour);
+        }
+      }
+      this.hoursAmount = new AmountWidget(this.dom.hoursAmount, 0.5, 0 , this.freeHour , this.freeHour);
+    }
+    console.log('total',this.freeHour);
   }
 
   formSubmitClickHandler() {
@@ -222,7 +239,7 @@ class Booking {
 
   initWidget() {
     this.peopleAmount = new AmountWidget(this.dom.peopleAmount);
-    this.hoursAmount = new AmountWidget(this.dom.hoursAmount);
+    this.hoursAmount = new AmountWidget(this.dom.hoursAmount, 0.5, 0 ,this.freeHour , 0.5);
 
     this.datePicker = new DatePicker(this.dom.datePicker);
     this.hourPicker = new HourPicker(this.dom.hourPicker);
