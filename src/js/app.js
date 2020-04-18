@@ -2,16 +2,23 @@ import {settings, select, classNames, templates} from './settings.js';
 import Cart from './components/Cart.js';
 import Booking from './components/Booking.js';
 import Product from './components/Product.js';
+import Home from './components/Home.js';
 
 const app = {
 
   initPages: function() {
     this.pages = document.querySelector(select.containerOf.pages).children;
     this.navLinks = document.querySelectorAll(select.nav.links);
+    this.buttons = document.querySelectorAll('.menu-buttons a');
+
+    this.allLinks =[...this.navLinks, ...this.buttons];
 
     const idFromHash = window.location.hash.replace('#/','');
 
+    // let pageMatchingHash = '#home';
     let pageMatchingHash = this.pages[0].id;
+    console.log('pages',this.pages);
+
 
     for(let page of this.pages) {
       if(page.id == idFromHash) {
@@ -22,8 +29,8 @@ const app = {
 
     this.activatePage(pageMatchingHash);
 
-    for(let link of this.navLinks){
-      link.addEventListener('click', (event) => {
+    for(let link of this.allLinks){
+      link.addEventListener('click', event => {
         event.preventDefault();
         const id = event.currentTarget.getAttribute('href').replace('#','');
         this.activatePage(id);
@@ -42,6 +49,11 @@ const app = {
         classNames.nav.active,
         link.getAttribute('href') == '#' + pageId
       );
+
+      document.querySelector('.main-nav')
+        .classList.toggle('none', pageId == 'home');
+      document.querySelector('#cart')
+        .classList.toggle('none', pageId == 'home');
     }
   },
 
@@ -83,6 +95,11 @@ const app = {
     new Booking(bookingContainer);
   },
 
+  initHome() {
+    const homeContainer = document.querySelector(select.containerOf.home);
+    new Home(homeContainer);
+  },
+
   init: function(){
     const thisApp = this;
     console.log('*** App starting ***');
@@ -91,10 +108,12 @@ const app = {
     console.log('settings:', settings);
     console.log('templates:', templates);
 
+    this.initHome();
     this.initPages();
     this.initData();
     this.initCart();
     this.initBooking();
+
   },
 };
 
