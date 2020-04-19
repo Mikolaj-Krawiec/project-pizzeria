@@ -163,7 +163,7 @@ class Booking {
           console.log(this.freeHour);
         }
       }
-      this.hoursAmount = new AmountWidget(this.dom.hoursAmount, 0.5, 0 , this.freeHour , this.freeHour);
+      this.hoursAmount = new AmountWidget(this.dom.hoursAmount, 0.5, 0.5 , this.freeHour , this.freeHour);
     }
     console.log('total',this.freeHour);
   }
@@ -239,7 +239,7 @@ class Booking {
 
   initWidget() {
     this.peopleAmount = new AmountWidget(this.dom.peopleAmount);
-    this.hoursAmount = new AmountWidget(this.dom.hoursAmount, 0.5, 0 ,this.freeHour , 0.5);
+    this.hoursAmount = new AmountWidget(this.dom.hoursAmount, 0.5, 0.5 ,this.freeHour , 0.5);
 
     this.datePicker = new DatePicker(this.dom.datePicker);
     this.hourPicker = new HourPicker(this.dom.hourPicker);
